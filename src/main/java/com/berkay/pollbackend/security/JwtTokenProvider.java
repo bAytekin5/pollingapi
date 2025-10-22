@@ -13,20 +13,14 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
-/**
- * JWT token üretimi, doğrulaması ve içinden kullanıcı bilgisi çıkarımı için kullanılan yardımcı sınıf.
- */
 @Component
 public class JwtTokenProvider {
 
-    // Loglama için SLF4J kullanımı
     private static final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);
 
-    // application.properties içinden gelen gizli anahtar
     @Value("${app.jwtSecret}")
     private String jwtSecret;
 
-    // Token geçerlilik süresi (milisaniye cinsinden)
     @Value("${app.jwtExpirationInMs}")
     private int jwtExpirationInMs;
 
@@ -34,12 +28,7 @@ public class JwtTokenProvider {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 
-    /**
-     * Kullanıcı kimliğiyle JWT token üretir.
-     *
-     * @param authentication Spring Security'den gelen kimlik doğrulama nesnesi
-     * @return imzalanmış JWT token
-     */
+
     public String generateToken(Authentication authentication) {
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
         Date now = new Date();
@@ -47,55 +36,40 @@ public class JwtTokenProvider {
 
 
         return Jwts.builder()
-                .subject(Long.toString(userPrincipal.getId())) // Token'ın subject alanına kullanıcı ID'si yazılır
-                .issuedAt(now)                                 // Token oluşturulma zamanı
-                .expiration(expiryDate)                        // Token geçerlilik süresi
-                .signWith(getSignKey())                           // Token imzalanır
-                .compact();                                    // Token string olarak döndürülür
+                .subject(Long.toString(userPrincipal.getId()))
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(getSignKey())
+                .compact();
     }
 
-    /**
-     * JWT içinden kullanıcı ID'sini çıkarır.
-     *
-     * @param token gelen JWT token
-     * @return kullanıcı ID'si (Long)
-     */
     public Long getUserIdFromJWT(String token) {
-        // Token doğrulanır ve içeriği (claims) alınır
         Claims claims = Jwts.parser()
-                .verifyWith(getSignKey()) // imza doğrulaması yapılır
+                .verifyWith(getSignKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
 
-        // Subject alanı kullanıcı ID'si olarak döner
         return Long.parseLong(claims.getSubject());
     }
 
-    /**
-     * Token geçerli mi diye kontrol eder.
-     *
-     * @param authToken gelen JWT token
-     * @return geçerliyse true, değilse false
-     */
     public boolean validateToken(String authToken) {
         try {
-            // Token imzası ve yapısı doğrulanır
             Jwts.parser()
                     .verifyWith(getSignKey())
                     .build()
                     .parseSignedClaims(authToken);
             return true;
         } catch (SignatureException e) {
-            logger.error("Invalid JWT Signature"); // İmza uyuşmuyor
+            logger.error("Invalid JWT Signature");
         } catch (MalformedJwtException e) {
-            logger.error("Invalid JWT Token"); // Token yapısı bozuk
+            logger.error("Invalid JWT Token");
         } catch (ExpiredJwtException e) {
-            logger.error("Expired JWT Token"); // Token süresi dolmuş
+            logger.error("Expired JWT Token");
         } catch (UnsupportedJwtException e) {
-            logger.error("Unsupported JWT Token"); // Desteklenmeyen format
+            logger.error("Unsupported JWT Token");
         } catch (IllegalArgumentException e) {
-            logger.error("JWT Claims string is empty"); // Token boş veya null
+            logger.error("JWT Claims string is empty");
         }
         return false;
     }

@@ -17,10 +17,7 @@ public class AppException extends RuntimeException {
         super(message);
     }
 
-    /**
-     * Hem hata mesajını hem de altında yatan asıl nedeni (cause) iletmek istediğimde bu yapıyı kullanıyorum.
-     * Örneğin bir service içinde başka bir exception yakalayıp sarmalamam gerekirse.
-     */
+
     public AppException(String message, Throwable cause) {
         super(message, cause);
     }

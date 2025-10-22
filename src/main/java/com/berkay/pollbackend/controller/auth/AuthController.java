@@ -29,7 +29,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.Collections;
 
-// TODO Yorum satirlari eklenecek
 
 @RestController
 @RequestMapping("/api/auth")
