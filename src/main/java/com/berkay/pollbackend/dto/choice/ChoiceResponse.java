@@ -4,7 +4,7 @@ public class ChoiceResponse {
 
     private Long id;
     private String text;
-    private Long voteCount;
+    private long voteCount;
 
     public Long getId() {
         return id;
@@ -26,7 +26,7 @@ public class ChoiceResponse {
         return voteCount;
     }
 
-    public void setVoteCount(Long voteCount) {
+    public void setVoteCount(long voteCount) {
         this.voteCount = voteCount;
     }
 }

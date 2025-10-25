@@ -1,5 +1,6 @@
 package com.berkay.pollbackend.model;
 
+import com.berkay.pollbackend.model.audit.DateAudit;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -13,7 +14,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "polls")
-public class Poll {
+public class Poll extends DateAudit {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -68,12 +69,13 @@ public class Poll {
     public void setExpirationDateTime(Instant expirationDateTime) {
         this.expirationDateTime = expirationDateTime;
     }
-    public void addChoice(Choice choice){
+
+    public void addChoice(Choice choice) {
         choices.add(choice);
         choice.setPoll(this);
     }
 
-    public void removeChoice(Choice choice){
+    public void removeChoice(Choice choice) {
         choices.remove(choice);
         choice.setPoll(this);
     }
