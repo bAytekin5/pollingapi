@@ -3,6 +3,7 @@ package com.berkay.pollbackend.repository;
 import com.berkay.pollbackend.model.ChoiceVoteCount;
 import com.berkay.pollbackend.model.Vote;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

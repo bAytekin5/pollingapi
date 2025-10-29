@@ -5,9 +5,7 @@ import com.berkay.pollbackend.dto.poll.PollRequest;
 import com.berkay.pollbackend.dto.poll.PollResponse;
 import com.berkay.pollbackend.dto.vote.VoteRequest;
 import com.berkay.pollbackend.exception.ResourceNotFoundException;
-import com.berkay.pollbackend.model.Choice;
-import com.berkay.pollbackend.model.Poll;
-import com.berkay.pollbackend.model.User;
+import com.berkay.pollbackend.model.*;
 import com.berkay.pollbackend.repository.PollRepository;
 import com.berkay.pollbackend.repository.UserRepository;
 import com.berkay.pollbackend.repository.VoteRepository;
@@ -27,6 +25,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -92,7 +91,26 @@ public class PollServiceImpl implements PollService {
 
     @Override
     public PollResponse getPollById(Long pollId, UserPrincipal currentUser) {
-        return null;
+        Poll poll = pollRepository.findById(pollId).orElseThrow(
+                () -> new ResourceNotFoundException("Poll", "id", pollId));
+
+        List<ChoiceVoteCount> votes = voteRepository.countByPollIdGroupByChoiceId(pollId);
+
+        Map<Long, Long> choiceVotesMap = votes.stream()
+                .collect(Collectors.toMap(ChoiceVoteCount::getChoiceId, ChoiceVoteCount::getVoteCount));
+
+        User creator = userRepository.findById(poll.getCreatedBy())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", poll.getCreatedBy()));
+
+        Vote userVote = null;
+
+        if (currentUser != null) {
+            userVote = voteRepository.findByUserIdAndPollId(currentUser.getId(), pollId);
+        }
+
+        return ModelMapper.mapPollToPollResponse(poll, choiceVotesMap,
+                creator,
+                userVote != null ? userVote.getChoice().getId() : null);
     }
 
     @Override
