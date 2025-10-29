@@ -4,6 +4,7 @@ import com.berkay.pollbackend.model.audit.DateAudit;
 import com.berkay.pollbackend.model.audit.UserDateAudit;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Fetch;
@@ -36,7 +37,7 @@ public class Poll extends UserDateAudit {
     @BatchSize(size = 30)
     private List<Choice> choices = new ArrayList<>();
 
-    @NotBlank
+    @NotNull
     private Instant expirationDateTime;
 
     public Long getId() {
