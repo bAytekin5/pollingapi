@@ -5,6 +5,7 @@ import com.berkay.pollbackend.dto.poll.PollRequest;
 import com.berkay.pollbackend.dto.poll.PollResponse;
 import com.berkay.pollbackend.dto.vote.VoteRequest;
 import com.berkay.pollbackend.exception.ResourceNotFoundException;
+import com.berkay.pollbackend.model.Choice;
 import com.berkay.pollbackend.model.Poll;
 import com.berkay.pollbackend.model.User;
 import com.berkay.pollbackend.repository.PollRepository;
@@ -21,6 +22,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +74,20 @@ public class PollServiceImpl implements PollService {
 
     @Override
     public Poll createPoll(PollRequest pollRequest) {
-        return null;
+
+        Poll poll = new Poll();
+        poll.setQuestion(pollRequest.getQuestion());
+
+        pollRequest.getChoices().forEach(choiceRequest -> {
+            poll.addChoice(new Choice(choiceRequest.getText()));
+        });
+
+        Instant now = Instant.now();
+        Instant expirationDateTime = now.plus(Duration.ofDays(pollRequest.getPollLenght().getDays()))
+                .plus(Duration.ofHours(pollRequest.getPollLenght().getHours()));
+
+        poll.setExpirationDateTime(expirationDateTime);
+        return pollRepository.save(poll);
     }
 
     @Override
