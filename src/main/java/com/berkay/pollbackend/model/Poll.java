@@ -1,8 +1,10 @@
 package com.berkay.pollbackend.model;
 
 import com.berkay.pollbackend.model.audit.DateAudit;
+import com.berkay.pollbackend.model.audit.UserDateAudit;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Fetch;
@@ -14,7 +16,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "polls")
-public class Poll extends DateAudit {
+public class Poll extends UserDateAudit {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,7 +37,7 @@ public class Poll extends DateAudit {
     @BatchSize(size = 30)
     private List<Choice> choices = new ArrayList<>();
 
-    @NotBlank
+    @NotNull
     private Instant expirationDateTime;
 
     public Long getId() {
