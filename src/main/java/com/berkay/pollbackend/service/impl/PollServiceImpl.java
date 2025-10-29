@@ -4,6 +4,7 @@ import com.berkay.pollbackend.dto.paged.PagedResponse;
 import com.berkay.pollbackend.dto.poll.PollRequest;
 import com.berkay.pollbackend.dto.poll.PollResponse;
 import com.berkay.pollbackend.dto.vote.VoteRequest;
+import com.berkay.pollbackend.exception.BadRequestException;
 import com.berkay.pollbackend.exception.ResourceNotFoundException;
 import com.berkay.pollbackend.model.*;
 import com.berkay.pollbackend.repository.PollRepository;
@@ -14,6 +15,7 @@ import com.berkay.pollbackend.service.PollService;
 import com.berkay.pollbackend.util.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -115,7 +117,41 @@ public class PollServiceImpl implements PollService {
 
     @Override
     public PollResponse castVoteAndGetUpdatedPoll(Long pollId, VoteRequest voteRequest, UserPrincipal currentUser) {
-        return null;
+        Poll poll = pollRepository.findById(pollId)
+                .orElseThrow(() -> new ResourceNotFoundException("Poll", "id", pollId));
+
+        if (poll.getExpirationDateTime().isBefore(Instant.now())) {
+            throw new BadRequestException("Sorry! This Poll has already expired");
+        }
+
+        User user = userRepository.findById(currentUser.getId()).
+                orElseThrow(() -> new ResourceNotFoundException("User", "id", currentUser.getId()));
+
+        Choice selectedChoice = poll.getChoices().stream()
+                .filter(choice -> choice.getId().equals(voteRequest.getChoiceId()))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Choice", "id", voteRequest.getChoiceId()));
+
+        Vote vote = new Vote();
+        vote.setPoll(poll);
+        vote.setUser(user);
+        vote.setChoice(selectedChoice);
+
+        try {
+            vote = voteRepository.save(vote);
+        } catch (DataIntegrityViolationException ex) {
+            logger.info("User {} has already voted in Poll {}", currentUser.getId(), pollId);
+            throw new BadRequestException("Sorry! You have already cast your vote in this poll");
+        }
+
+        List<ChoiceVoteCount> votes = voteRepository.countByPollIdGroupByChoiceId(pollId);
+
+        Map<Long, Long> choicesVotesMap = votes.stream()
+                .collect(Collectors.toMap(ChoiceVoteCount::getChoiceId, ChoiceVoteCount::getVoteCount));
+        User creator = userRepository.findById(poll.getCreatedBy())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", poll.getCreatedBy()));
+
+        return ModelMapper.mapPollToPollResponse(poll, choicesVotesMap, creator, vote.getChoice().getId());
     }
 
     @Override
