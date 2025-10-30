@@ -28,6 +28,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
@@ -220,18 +221,36 @@ public class PollServiceImpl implements PollService {
     }
 
 
-    // todo map package taşı
     private Map<Long, Long> getChoiceVoteCountMap(List<Long> pollIds) {
-        return null;
+        List<ChoiceVoteCount> votes = voteRepository.countByPollIdInGroupByChoiceId(pollIds);
+
+        return votes.stream()
+                .collect(Collectors.toMap(ChoiceVoteCount::getChoiceId, ChoiceVoteCount::getVoteCount));
     }
 
     private Map<Long, Long> getPollUserVoteMap(UserPrincipal currentUser, List<Long> pollIds) {
-        return null;
+
+        Map<Long, Long> pollUserVoteMap = null;
+        if (currentUser != null) {
+            List<Vote> userVotes = voteRepository.findByUserIdAndPollIdIn(currentUser.getId(), pollIds);
+
+            pollUserVoteMap = userVotes.stream()
+                    .collect(Collectors.toMap(vote -> vote.getPoll().getId(), vote -> vote.getChoice().getId()));
+        }
+        return pollUserVoteMap;
     }
 
-    private Map<Long, User> getPollCreatorMap(List<Poll> content) {
+    private Map<Long, User> getPollCreatorMap(List<Poll> polls) {
 
-        return null;
+        List<Long> creatorIds = polls.stream()
+                .map(Poll::getCreatedBy)
+                .distinct()
+                .collect(Collectors.toList());
+
+        List<User> creators = userRepository.findByIdIn(creatorIds);
+
+        return creators.stream()
+                .collect(Collectors.toMap(User::getId, Function.identity()));
     }
 
 }
