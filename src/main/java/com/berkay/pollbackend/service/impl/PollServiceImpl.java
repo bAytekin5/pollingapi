@@ -13,6 +13,7 @@ import com.berkay.pollbackend.repository.VoteRepository;
 import com.berkay.pollbackend.security.UserPrincipal;
 import com.berkay.pollbackend.service.PollService;
 import com.berkay.pollbackend.util.ModelMapper;
+import com.berkay.pollbackend.util.ValidatePageAndSize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -47,7 +48,7 @@ public class PollServiceImpl implements PollService {
 
     @Override
     public PagedResponse<PollResponse> getAllPolls(UserPrincipal currentUser, int page, int size) {
-        validatePageNumberAndSize(page, size);
+        ValidatePageAndSize.validatePageNumberAndSize(page, size);
 
         // retrieve
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
@@ -156,7 +157,7 @@ public class PollServiceImpl implements PollService {
 
     @Override
     public PagedResponse<PollResponse> getPollsCreatedBy(String username, UserPrincipal currentUser, int page, int size) {
-        validatePageNumberAndSize(page, size);
+        ValidatePageAndSize.validatePageNumberAndSize(page, size);
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
 
@@ -185,7 +186,7 @@ public class PollServiceImpl implements PollService {
 
     @Override
     public PagedResponse<PollResponse> getPollsVotedBy(String username, UserPrincipal currentUser, int page, int size) {
-        validatePageNumberAndSize(page, size);
+        ValidatePageAndSize.validatePageNumberAndSize(page, size);
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
@@ -222,9 +223,6 @@ public class PollServiceImpl implements PollService {
     // todo map package taşı
     private Map<Long, Long> getChoiceVoteCountMap(List<Long> pollIds) {
         return null;
-    }
-
-    private void validatePageNumberAndSize(int page, int size) {
     }
 
     private Map<Long, Long> getPollUserVoteMap(UserPrincipal currentUser, List<Long> pollIds) {
