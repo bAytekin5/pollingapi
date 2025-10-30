@@ -183,6 +183,41 @@ public class PollServiceImpl implements PollService {
                 polls.getSize(), polls.getTotalElements(), polls.getTotalPages(), polls.isLast());
     }
 
+    @Override
+    public PagedResponse<PollResponse> getPollsVotedBy(String username, UserPrincipal currentUser, int page, int size) {
+        validatePageNumberAndSize(page, size);
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
+
+        Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
+        Page<Long> userVotedPollsIds = voteRepository.findVotedPollIdsByUserId(user.getId(), pageable);
+
+        if (userVotedPollsIds.getNumberOfElements() == 0) {
+            return new PagedResponse<>(Collections.emptyList(), userVotedPollsIds.getNumber(),
+                    userVotedPollsIds.getSize(), userVotedPollsIds.getTotalElements(),
+                    userVotedPollsIds.getTotalPages(), userVotedPollsIds.isLast());
+        }
+
+        List<Long> pollIds = userVotedPollsIds.getContent();
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        List<Poll> polls = pollRepository.findByIdIn(pollIds, sort);
+
+        Map<Long, Long> choiceVoteCountMap = getChoiceVoteCountMap(pollIds);
+        Map<Long, Long> pollUserVoteMap = getPollUserVoteMap(currentUser, pollIds);
+        Map<Long, User> creatorMap = getPollCreatorMap(polls);
+
+        List<PollResponse> pollResponses = polls.stream().map(poll -> {
+            return ModelMapper.mapPollToPollResponse(poll,
+                    choiceVoteCountMap,
+                    creatorMap.get(poll.getCreatedBy()),
+                    pollUserVoteMap == null ? null : pollUserVoteMap.getOrDefault(poll.getId(), null));
+        }).toList();
+
+        return new PagedResponse<>(pollResponses, userVotedPollsIds.getNumber(), userVotedPollsIds.getSize(),
+                userVotedPollsIds.getTotalElements(), userVotedPollsIds.getTotalPages(), userVotedPollsIds.isLast());
+    }
+
 
     // todo map package taşı
     private Map<Long, Long> getChoiceVoteCountMap(List<Long> pollIds) {

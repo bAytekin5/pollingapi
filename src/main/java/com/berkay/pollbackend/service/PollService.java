@@ -18,4 +18,6 @@ public interface PollService {
     PollResponse castVoteAndGetUpdatedPoll(Long pollId, @Valid VoteRequest voteRequest, UserPrincipal currentUser);
 
     PagedResponse<PollResponse> getPollsCreatedBy(String username, UserPrincipal currentUser, int page, int size);
+
+    PagedResponse<PollResponse> getPollsVotedBy(String username, UserPrincipal currentUser, int page, int size);
 }
