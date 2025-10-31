@@ -21,10 +21,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-/**
- * Uygulamanın güvenlik yapılandırmasını tanımlar.
- * Spring Security'nin modern yaklaşımı olan SecurityFilterChain ile filtreler, yetkilendirme ve oturum yönetimi yapılandırılır.
- */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true, prePostEnabled = true)
